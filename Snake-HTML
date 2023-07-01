@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <style>
+  body {
+    background: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: white;
+    font-size: 24px;
+    font-family: Arial, sans-serif;
+  }
+  canvas {
+    border: 5px solid white;
+  }
+  #score {
+    margin-top: 20px;
+  }
+  </style>
+</head>
+<body>
+  <canvas width="640" height="640" id="game"></canvas>
+  <div id="score">Score: 0</div>
+   <div id="highScore">High Score: 0</div>
+  <script src="script.js"></script>
+</body>
+</html>
