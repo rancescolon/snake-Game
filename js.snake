@@ -1,0 +1,183 @@
+var canvas = document.getElementById('game'); // gets game element from HTML using canvas 
+var context = canvas.getContext('2d'); // render the game in 2D
+
+var score = 0;
+var highScore = 0;
+var units = 16; // size of each element 
+var count = 0;
+
+var snake = {
+  // spawn in snake
+  x: 160,
+  y: 160,
+  // snakes speed
+  xSpeed: units,
+  ySpeed: 0,
+  // snakes length
+  cells: [],
+  maxCells: 1
+};
+
+var apple = { x: 320, y: 320 }; // spawn in apple 
+
+function appleSpawner(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+} // gets random position for apple 
+
+function updateScore() {
+  var scoreElement = document.getElementById('score');
+  scoreElement.textContent = 'Score: ' + score;
+
+  var highScoreElement = document.getElementById('highScore');
+  highScoreElement.textContent = 'High Score: ' + highScore;
+  
+}
+
+function game() {
+  requestAnimationFrame(game);
+  if (++count < 12) {
+    // controls game's FPS
+    return;
+  }
+  count = 0;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  // change snake position
+  snake.x += snake.xSpeed;
+  snake.y += snake.ySpeed;
+
+  // wrap around
+  if (snake.x < 0) {
+    snake.x = canvas.width - units;
+  } else if (snake.x >= canvas.width) {
+    snake.x = 0;
+  }
+
+  if (snake.y < 0) {
+    snake.y = canvas.height - units;
+  } else if (snake.y >= canvas.height) {
+    snake.y = 0;
+  }
+
+  // adds new cell to snake
+  snake.cells.unshift({ x: snake.x, y: snake.y });
+
+  // stop snake from growing when not eating
+  if (snake.cells.length > snake.maxCells) {
+    snake.cells.pop();
+  }
+
+  // draws apple color
+  context.fillStyle = 'white';
+  context.fillRect(apple.x, apple.y, units - 1, units - 1);
+
+  // draws each snake cell
+  context.fillStyle = 'red';
+  snake.cells.forEach(function (cell, index) {
+    context.fillRect(cell.x, cell.y, units - 1, units - 1);
+
+    // checks if snake touched apple
+    if (cell.x === apple.x && cell.y === apple.y) {
+      snake.maxCells++;
+      score++;
+      updateScore();
+      apple.x = appleSpawner(0, 40) * units;
+      apple.y = appleSpawner(0, 40) * units;
+    }
+    //checks if snake hit its self
+    for (var i = index + 1; i < snake.cells.length; i++) {
+      if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+        resetGame();
+        return; // exit the game loop
+      }
+    }
+  });
+}
+
+function resetGame() {
+  // reset snake and apple positions
+  snake.x = 160;
+  snake.y = 160;
+  snake.cells = [];
+  snake.maxCells = 1;
+  snake.xSpeed = units;
+  snake.ySpeed = 0;
+  apple.x = appleSpawner(0, 40) * units;
+  apple.y = appleSpawner(0, 40) * units;
+
+  // reset score
+  if (score > highScore) {
+    highScore = score;
+  }
+  score = 0;
+  updateScore();
+}
+
+// lets snake move 
+document.addEventListener('keydown', function (e) {
+  if (e.which === 37 && snake.xSpeed === 0) {
+    // left
+    snake.xSpeed = -units;
+    snake.ySpeed = 0;
+  } else if (e.which === 38 && snake.ySpeed === 0) {
+    // up
+    snake.ySpeed = -units;
+    snake.xSpeed = 0;
+  } else if (e.which === 39 && snake.xSpeed === 0) {
+    // right
+    snake.xSpeed = units;
+    snake.ySpeed = 0;
+  } else if (e.which === 40 && snake.ySpeed === 0) {
+    // down
+    snake.ySpeed = units;
+    snake.xSpeed = 0;
+  }
+});
+
+// touch screen 
+function handleTouchStart(event) {
+  //gets start position of touch 
+  var touch = event.changedTouches[0];
+  startX = touch.pageX; // X position 
+  startY = touch.pageY; // Y position 
+}
+
+function handleTouchEnd(event) {
+  var touch = event.changedTouches[0];
+  //end position if touch 
+  endX = touch.pageX; //X position 
+  endY = touch.pageY; // Y position 
+  
+  var deltaX = endX - startX;
+  var deltaY = endY - startY;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    // Horizontal swipe
+    if (deltaX > 0 && snake.xSpeed === 0) {
+      // Swipe right
+      snake.xSpeed = units;
+      snake.ySpeed = 0;
+    } else if (deltaX < 0 && snake.xSpeed === 0) {
+      // Swipe left
+      snake.xSpeed = -units;
+      snake.ySpeed = 0;
+    }
+  } else {
+    // Vertical swipe
+    if (deltaY > 0 && snake.ySpeed === 0) {
+      // Swipe down
+      snake.ySpeed = units;
+      snake.xSpeed = 0;
+    } else if (deltaY < 0 && snake.ySpeed === 0) {
+      // Swipe up
+      snake.ySpeed = -units;
+      snake.xSpeed = 0;
+    }
+  }
+}
+
+canvas.addEventListener('touchstart', handleTouchStart);
+canvas.addEventListener('touchend', handleTouchEnd);
+
+updateScore();
+requestAnimationFrame(game);
